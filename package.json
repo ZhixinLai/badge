@@ -1,0 +1,14 @@
+{
+  "name": "badge",
+  "description": "",
+  "version": "0.1.0",
+  "dependencies": {
+    "express": "^4.17.1",
+    "serverless-http": "^2.3.0"
+  },
+  "devDependencies": {
+    "serverless-iam-roles-per-function": "^2.0.2",
+    "serverless-pseudo-parameters": "^2.5.0",
+    "serverless-step-functions": "^2.11.0"
+  }
+}
