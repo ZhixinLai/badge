@@ -3,7 +3,7 @@ const docClient = new AWS.DynamoDB.DocumentClient({
   region: process.env.AWS_REGION
 });
 
-const getMovement = (dataset_id, query) => {
+const getVoice = (dataset_id, query) => {
   var badge_id = query.badge_id;
   var dataFrom = query.dataFrom;
   var dataTo = query.dataTo;
@@ -30,7 +30,7 @@ const getMovement = (dataset_id, query) => {
   var scanParams = {
     FilterExpression: filterExpression.join(" AND "),
     ExpressionAttributeValues: expressionAttributeValues,
-    TableName: process.env.MOVEMENT_TABLE_NAME
+    TableName: process.env.VOICE_TABLE_NAME
   };
 
   return new Promise((resolve, reject) => {
@@ -46,4 +46,4 @@ const getMovement = (dataset_id, query) => {
   });
 };
 
-module.exports = getMovement;
+module.exports = getVoice;

@@ -43,10 +43,11 @@ provider:
             "Fn::Join":
               ["/", [{ "Fn::GetAtt": ["movementTable", "Arn"] }, "index", "*"]],
           }
-
-
-
-
+        - { "Fn::GetAtt": ["voiceTable", "Arn"] }
+        - {
+            "Fn::Join":
+              ["/", [{ "Fn::GetAtt": ["voiceTable", "Arn"] }, "index", "*"]],
+          }
 
 # you can overwrite defaults here
 #  stage: dev
@@ -72,29 +73,32 @@ provider:
 #  environment:
 #    variable1: value1
 
-
-
 functions:
-  getMovement:
+  apis:
     handler: index.handler
     environment:
-      STATE_MACHINE_ARN: { "Ref" : "Hellostepfunc1StepFunctionsStateMachine" } 
-      TABLE_NAME: movementTable
+      STATE_MACHINE_ARN: { "Ref": "Hellostepfunc1StepFunctionsStateMachine" }
+      MOVEMENT_TABLE_NAME: movementTable
+      VOICE_TABLE_NAME: voiceTable
     iamRoleStatementsInherit: true # lambda quanxian
     iamRoleStatements:
       - Effect: Allow
         Action:
           - states:*
-        Resource: 
+        Resource:
           - "*"
     events:
       - http:
           path: /api/movement/{proxy+}
           method: GET
           cors: true
-      - http: 
+      - http:
           path: /api/movement
           method: POST
+          cors: true
+      - http:
+          path: /api/voice/{proxy+}
+          method: GET
           cors: true
   putitem:
     handler: putitem.handler
@@ -169,7 +173,6 @@ functions:
 #           ReadCapacityUnits: 1
 #           WriteCapacityUnits: 1
 
-
 resources: # CloudFormation template syntax
   Resources:
     movementTable:
@@ -189,7 +192,23 @@ resources: # CloudFormation template syntax
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-
+    voiceTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: voiceTable
+        AttributeDefinitions:
+          - AttributeName: badge_id
+            AttributeType: S
+          - AttributeName: time_stamp
+            AttributeType: N
+        KeySchema:
+          - AttributeName: badge_id
+            KeyType: HASH
+          - AttributeName: time_stamp
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
 
 stepFunctions:
   stateMachines:
@@ -207,9 +226,7 @@ stepFunctions:
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putitem" # 格式怎么写？
             End: true
 
-
 plugins:
   - serverless-step-functions
   - serverless-pseudo-parameters
   - serverless-iam-roles-per-function
-
