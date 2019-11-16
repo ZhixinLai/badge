@@ -16,7 +16,7 @@ router.get("/movement/:dataset_id", (req, res) => {
     });
 });
 
-router.post("/movement", function(req, res) {
+router.post("/", function(req, res) {
   getFromMobile(JSON.parse(req.body.toString()))
     .then(result => {
       res.json({ success: true });

@@ -93,18 +93,21 @@ functions:
           method: GET
           cors: true
       - http:
-          path: /api/movement
+          path: /api
           method: POST
           cors: true
       - http:
           path: /api/voice/{proxy+}
           method: GET
           cors: true
-  putitem:
-    handler: putitem.handler
+  putmovement:
+    handler: putmovement.handler
     environment:
-      TABLE_NAME: movementTable #可以多个嘛？
-
+      MOVEMENT_TABLE_NAME: movementTable
+  putvoice:
+    handler: putvoice.handler
+    environment:
+      VOICE_TABLE_NAME: voiceTable
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
@@ -219,12 +222,34 @@ stepFunctions:
       #       method: POST
       definition:
         Comment: "A Hello World example of the Amazon States Language using an AWS Lambda Function"
-        StartAt: PutItem
+        StartAt: ChoiceState
         States:
-          PutItem:
-            Type: Task #几种task？
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putitem" # 格式怎么写？
+          ChoiceState:
+            Type: Choice
+            Choices: 
+            - 
+              Variable: "$.type"
+              StringEquals: Movement
+              Next: PutMovement
+            - 
+              Variable: "$.type"
+              StringEquals: Voice
+              Next: PutVoice
+            Default: DefaultState
+          PutMovement:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putmovement"
             End: true
+          PutVoice:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putvoice"
+            End: true
+          DefaultState:
+            Type: Fail
+            Cause: "No Matches!"
+
+
+
 
 plugins:
   - serverless-step-functions
