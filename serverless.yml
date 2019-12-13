@@ -48,6 +48,26 @@ provider:
             "Fn::Join":
               ["/", [{ "Fn::GetAtt": ["voiceTable", "Arn"] }, "index", "*"]],
           }
+        - { "Fn::GetAtt": ["dataSetMetaDataTable", "Arn"] }
+        - {
+            "Fn::Join":
+              [
+                "/",
+                [
+                  { "Fn::GetAtt": ["dataSetMetaDataTable", "Arn"] },
+                  "index",
+                  "*",
+                ],
+              ],
+          }
+        - { "Fn::GetAtt": ["badgeMetaDataTable", "Arn"] }
+        - {
+            "Fn::Join":
+              [
+                "/",
+                [{ "Fn::GetAtt": ["badgeMetaDataTable", "Arn"] }, "index", "*"],
+              ],
+          }
 
 # you can overwrite defaults here
 #  stage: dev
@@ -80,6 +100,8 @@ functions:
       STATE_MACHINE_ARN: { "Ref": "Hellostepfunc1StepFunctionsStateMachine" }
       MOVEMENT_TABLE_NAME: movementTable
       VOICE_TABLE_NAME: voiceTable
+      DATA_SET_META_DATA_TABLE_NAME: dataSetMetaDataTable
+      BADGE_DATA_TABLE_NAME: badgeMetaDataTable
     iamRoleStatementsInherit: true # lambda quanxian
     iamRoleStatements:
       - Effect: Allow
@@ -98,6 +120,22 @@ functions:
           cors: true
       - http:
           path: /api/voice/{proxy+}
+          method: GET
+          cors: true
+      - http:
+          path: /api/dataSetMetaData/{proxy+}
+          method: GET
+          cors: true
+      - http:
+          path: /api/badgeMetaData
+          method: GET
+          cors: true
+      - http:
+          path: /api/dataSetMetaData
+          method: GET
+          cors: true
+      - http:
+          path: /api/badgeMetaData/{proxy+}
           method: GET
           cors: true
   putmovement:
@@ -212,6 +250,36 @@ resources: # CloudFormation template syntax
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+    dataSetMetaDataTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: dataSetMetaDataTable
+        AttributeDefinitions:
+          - AttributeName: dataset_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: dataset_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    badgeMetaDataTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: badgeMetaDataTable
+        AttributeDefinitions:
+          - AttributeName: badge_id
+            AttributeType: S
+          - AttributeName: dataset_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: badge_id
+            KeyType: HASH
+          - AttributeName: dataset_id
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
 
 stepFunctions:
   stateMachines:
@@ -226,15 +294,13 @@ stepFunctions:
         States:
           ChoiceState:
             Type: Choice
-            Choices: 
-            - 
-              Variable: "$.type"
-              StringEquals: Movement
-              Next: PutMovement
-            - 
-              Variable: "$.type"
-              StringEquals: Voice
-              Next: PutVoice
+            Choices:
+              - Variable: "$.type"
+                StringEquals: Movement
+                Next: PutMovement
+              - Variable: "$.type"
+                StringEquals: Voice
+                Next: PutVoice
             Default: DefaultState
           PutMovement:
             Type: Task
@@ -247,9 +313,6 @@ stepFunctions:
           DefaultState:
             Type: Fail
             Cause: "No Matches!"
-
-
-
 
 plugins:
   - serverless-step-functions
