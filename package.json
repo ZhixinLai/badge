@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "dependencies": {
     "express": "^4.17.1",
+    "fft-js": "0.0.12",
     "serverless-http": "^2.3.0"
   },
   "devDependencies": {

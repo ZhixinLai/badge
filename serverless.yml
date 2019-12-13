@@ -48,7 +48,16 @@ provider:
             "Fn::Join":
               ["/", [{ "Fn::GetAtt": ["voiceTable", "Arn"] }, "index", "*"]],
           }
-
+        - { "Fn::GetAtt": ["badgeMetaDataTable", "Arn"] }
+        - {
+            "Fn::Join":
+              ["/", [{ "Fn::GetAtt": ["badgeMetaDataTable", "Arn"] }, "index", "*"]],
+          }
+        - { "Fn::GetAtt": ["datasetMetaDataTable", "Arn"] }
+        - {
+            "Fn::Join":
+              ["/", [{ "Fn::GetAtt": ["datasetMetaDataTable", "Arn"] }, "index", "*"]],
+          }
 # you can overwrite defaults here
 #  stage: dev
 #  region: us-east-1
@@ -80,6 +89,7 @@ functions:
       STATE_MACHINE_ARN: { "Ref": "Hellostepfunc1StepFunctionsStateMachine" }
       MOVEMENT_TABLE_NAME: movementTable
       VOICE_TABLE_NAME: voiceTable
+      BADGE_META_TABLE_NAME: badgeMetaDataTable
     iamRoleStatementsInherit: true # lambda quanxian
     iamRoleStatements:
       - Effect: Allow
@@ -108,6 +118,14 @@ functions:
     handler: putvoice.handler
     environment:
       VOICE_TABLE_NAME: voiceTable
+  putbadgemeta:
+    handler: putbadgemeta.handler
+    environment:
+      BADGE_META_TABLE_NAME: badgeMetaDataTable
+  putdatasetmeta:
+    handler: putdatasetmeta.handler
+    environment:
+      DATASET_META_TABLE_NAME: datasetMetaDataTable
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
@@ -212,6 +230,37 @@ resources: # CloudFormation template syntax
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+    badgeMetaDataTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: badgeMetaDataTable
+        AttributeDefinitions:
+          - AttributeName: badge_id
+            AttributeType: S
+          - AttributeName: dataset_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: badge_id
+            KeyType: HASH
+          - AttributeName: dataset_id
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    datasetMetaDataTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: datasetMetaDataTable
+        AttributeDefinitions:
+          - AttributeName: dataset_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: dataset_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
 
 stepFunctions:
   stateMachines:
@@ -235,6 +284,14 @@ stepFunctions:
               Variable: "$.type"
               StringEquals: Voice
               Next: PutVoice
+            - 
+              Variable: "$.type"
+              StringEquals: BadgeMetadata
+              Next: PutBadgeMeta
+            - 
+              Variable: "$.type"
+              StringEquals: DatasetMetadata
+              Next: PutDatasetMeta
             Default: DefaultState
           PutMovement:
             Type: Task
@@ -244,9 +301,18 @@ stepFunctions:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putvoice"
             End: true
+          PutBadgeMeta: 
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putbadgemeta"
+            End: true
+          PutDatasetMeta: 
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putdatasetmeta"
+            End: true
           DefaultState:
             Type: Fail
             Cause: "No Matches!"
+
 
 
 

@@ -5,44 +5,37 @@ const docClient = new AWS.DynamoDB.DocumentClient({
 
 
 // put al items
-const PutVoice = (data) => {
+const PutBadgeMeta = (data) => {
 
-  var promiseList = [];
-  // var UpdateExpression = 'SET record_time = :record_time, raw_x = :raw_x, ' +
-  // 'raw_y = :raw_y, raw_z = :raw_z';
-
-  for(var i = 0; i < data.time_stamp.length; i++) 
-  { 
-    var UpdateExpression = 'SET raw_f = :a, raw_m = :b, dataset_id = :dataset_id';
+    var UpdateExpression = 'SET mac_id = :a, user_name = :b, user_id = :c, time_stamp = :time_stamp';
 
     var ExpressionAttributeValues = {
-      ':a': data.a[i],
-      ':b': data.b[i],
-      ':dataset_id': data.dataset_id
+      ':a': data.a,
+      ':b': data.b,
+      ':c': data.c,
+      ':time_stamp': data.time_stamp
     };
     
     console.log("ExpressionAttributeValues", ExpressionAttributeValues);
   
     var ddbparams = {
-        TableName: process.env.VOICE_TABLE_NAME,
+        TableName: process.env.BADGE_META_TABLE_NAME,
         Key: {
             'badge_id': data.badge_id,
-            'time_stamp': data.time_stamp[i]
+            'dataset_id': data.dataset_id
         },
         UpdateExpression: UpdateExpression,
         ExpressionAttributeValues: ExpressionAttributeValues
     };
-    promiseList.push(docClient.update(ddbparams).promise());
-  }
+    return docClient.update(ddbparams).promise();
 
-  return Promise.all(promiseList);
 };
 
 
 
 module.exports.handler = (event, context, callback) => {
   console.log(event.toString());
-  PutVoice(event).then(result => {
+  PutBadgeMeta(event).then(result => {
     callback(null, {success:  true});
   }).catch(err => {
     callback(err);
