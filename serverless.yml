@@ -48,27 +48,16 @@ provider:
             "Fn::Join":
               ["/", [{ "Fn::GetAtt": ["voiceTable", "Arn"] }, "index", "*"]],
           }
-        - { "Fn::GetAtt": ["datasetMetaDataTable", "Arn"] }
-        - {
-            "Fn::Join":
-              [
-                "/",
-                [
-                  { "Fn::GetAtt": ["datasetMetaDataTable", "Arn"] },
-                  "index",
-                  "*",
-                ],
-              ],
-          }
         - { "Fn::GetAtt": ["badgeMetaDataTable", "Arn"] }
         - {
             "Fn::Join":
-              [
-                "/",
-                [{ "Fn::GetAtt": ["badgeMetaDataTable", "Arn"] }, "index", "*"],
-              ],
+              ["/", [{ "Fn::GetAtt": ["badgeMetaDataTable", "Arn"] }, "index", "*"]],
           }
-
+        - { "Fn::GetAtt": ["datasetMetaDataTable", "Arn"] }
+        - {
+            "Fn::Join":
+              ["/", [{ "Fn::GetAtt": ["datasetMetaDataTable", "Arn"] }, "index", "*"]],
+          }
 # you can overwrite defaults here
 #  stage: dev
 #  region: us-east-1
@@ -122,22 +111,6 @@ functions:
           path: /api/voice/{proxy+}
           method: GET
           cors: true
-      - http:
-          path: /api/datasetMetaData/{proxy+}
-          method: GET
-          cors: true
-      - http:
-          path: /api/badgeMetaData
-          method: GET
-          cors: true
-      - http:
-          path: /api/datasetMetaData
-          method: GET
-          cors: true
-      - http:
-          path: /api/badgeMetaData/{proxy+}
-          method: GET
-          cors: true
   putmovement:
     handler: putmovement.handler
     environment:
@@ -146,6 +119,14 @@ functions:
     handler: putvoice.handler
     environment:
       VOICE_TABLE_NAME: voiceTable
+  putbadgemeta:
+    handler: putbadgemeta.handler
+    environment:
+      BADGE_META_DATA_TABLE_NAME: badgeMetaDataTable
+  putdatasetmeta:
+    handler: putdatasetmeta.handler
+    environment:
+      DATA_SET_META_DATA_TABLE_NAME: datasetMetaDataTable
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
@@ -250,19 +231,6 @@ resources: # CloudFormation template syntax
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-    datasetMetaDataTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: datasetMetaDataTable
-        AttributeDefinitions:
-          - AttributeName: dataset_id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: dataset_id
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
     badgeMetaDataTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -280,6 +248,20 @@ resources: # CloudFormation template syntax
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+    datasetMetaDataTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: datasetMetaDataTable
+        AttributeDefinitions:
+          - AttributeName: dataset_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: dataset_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
 
 stepFunctions:
   stateMachines:
@@ -294,13 +276,23 @@ stepFunctions:
         States:
           ChoiceState:
             Type: Choice
-            Choices:
-              - Variable: "$.type"
-                StringEquals: Movement
-                Next: PutMovement
-              - Variable: "$.type"
-                StringEquals: Voice
-                Next: PutVoice
+            Choices: 
+            - 
+              Variable: "$.type"
+              StringEquals: Movement
+              Next: PutMovement
+            - 
+              Variable: "$.type"
+              StringEquals: Voice
+              Next: PutVoice
+            - 
+              Variable: "$.type"
+              StringEquals: BadgeMetadata
+              Next: PutBadgeMeta
+            - 
+              Variable: "$.type"
+              StringEquals: DatasetMetadata
+              Next: PutDatasetMeta
             Default: DefaultState
           PutMovement:
             Type: Task
@@ -310,9 +302,21 @@ stepFunctions:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putvoice"
             End: true
+          PutBadgeMeta: 
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putbadgemeta"
+            End: true
+          PutDatasetMeta: 
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putdatasetmeta"
+            End: true
           DefaultState:
             Type: Fail
             Cause: "No Matches!"
+
+
+
+
 
 plugins:
   - serverless-step-functions
