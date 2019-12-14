@@ -10,7 +10,7 @@ const getBadgeMetaData = (dataset_id, badge_id) => {
         badge_id: badge_id,
         dataset_id: dataset_id
       },
-      TableName: process.env.BADGE_DATA_TABLE_NAME
+      TableName: process.env.BADGE_META_DATA_TABLE_NAME
     };
     docClient
       .get(getParams)
@@ -26,7 +26,7 @@ const getBadgeMetaData = (dataset_id, badge_id) => {
 
 const getAllBadgeMetaData = query => {
   var scanParams = {
-    TableName: process.env.BADGE_DATA_TABLE_NAME
+    TableName: process.env.BADGE_META_DATA_TABLE_NAME
   };
 
   return new Promise((resolve, reject) => {
