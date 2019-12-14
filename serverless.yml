@@ -58,6 +58,16 @@ provider:
             "Fn::Join":
               ["/", [{ "Fn::GetAtt": ["datasetMetaDataTable", "Arn"] }, "index", "*"]],
           }
+        - { "Fn::GetAtt": ["QRcodeTable", "Arn"] }
+        - {
+            "Fn::Join":
+              ["/", [{ "Fn::GetAtt": ["QRcodeTable", "Arn"] }, "index", "*"]],
+          }
+        - { "Fn::GetAtt": ["nearMobilesTable", "Arn"] }
+        - {
+            "Fn::Join":
+              ["/", [{ "Fn::GetAtt": ["nearMobilesTable", "Arn"] }, "index", "*"]],
+          }
 # you can overwrite defaults here
 #  stage: dev
 #  region: us-east-1
@@ -91,6 +101,8 @@ functions:
       VOICE_TABLE_NAME: voiceTable
       DATA_SET_META_DATA_TABLE_NAME: datasetMetaDataTable
       BADGE_META_DATA_TABLE_NAME: badgeMetaDataTable
+      QRCODE_TABLE_NAME: QRcodeTable
+      NEAR_MOBILES_TABLE_NAME: nearMobilesTable  
     iamRoleStatementsInherit: true # lambda quanxian
     iamRoleStatements:
       - Effect: Allow
@@ -111,6 +123,22 @@ functions:
           path: /api/voice/{proxy+}
           method: GET
           cors: true
+      - http:
+          path: /api/datasetMetaData/{proxy+}
+          method: GET
+          cors: true
+      - http:
+          path: /api/badgeMetaData
+          method: GET
+          cors: true
+      - http:
+          path: /api/datasetMetaData
+          method: GET
+          cors: true
+      - http:
+          path: /api/badgeMetaData/{proxy+}
+          method: GET
+          cors: true
   putmovement:
     handler: putmovement.handler
     environment:
@@ -127,6 +155,14 @@ functions:
     handler: putdatasetmeta.handler
     environment:
       DATA_SET_META_DATA_TABLE_NAME: datasetMetaDataTable
+  putqrcode:
+    handler: putqrcode.handler
+    environment:
+      QRCODE_TABLE_NAME: QRcodeTable
+  putnearmobiles:
+    handler: putnearmobiles.handler
+    environment:
+      NEAR_MOBILES_TABLE_NAME: nearMobilesTable  
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
@@ -261,7 +297,40 @@ resources: # CloudFormation template syntax
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-
+    QRcodeTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: QRcodeTable
+        AttributeDefinitions:
+          - AttributeName: badge_id
+            AttributeType: S
+          - AttributeName: time_stamp
+            AttributeType: N
+        KeySchema:
+          - AttributeName: badge_id
+            KeyType: HASH
+          - AttributeName: time_stamp
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    nearMobilesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: nearMobilesTable
+        AttributeDefinitions:
+          - AttributeName: badge_id
+            AttributeType: S
+          - AttributeName: time_stamp
+            AttributeType: N
+        KeySchema:
+          - AttributeName: badge_id
+            KeyType: HASH
+          - AttributeName: time_stamp
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
 
 stepFunctions:
   stateMachines:
@@ -293,6 +362,15 @@ stepFunctions:
               Variable: "$.type"
               StringEquals: DatasetMetadata
               Next: PutDatasetMeta
+            - 
+              Variable: "$.type"
+              StringEquals: QRcode
+              Next: PutQRcode
+            - 
+              Variable: "$.type"
+              StringEquals: NearMobiles
+              Next: PutNearMobiles
+
             Default: DefaultState
           PutMovement:
             Type: Task
@@ -310,12 +388,17 @@ stepFunctions:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putdatasetmeta"
             End: true
+          PutQRcode:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putqrcode"
+            End: true
+          PutNearMobiles:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putnearmobiles"
+            End: true
           DefaultState:
             Type: Fail
             Cause: "No Matches!"
-
-
-
 
 
 plugins:

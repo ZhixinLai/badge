@@ -13,11 +13,11 @@ const PutVoice = (data) => {
 
   for(var i = 0; i < data.time_stamp.length; i++) 
   { 
-    var UpdateExpression = 'SET raw_f = :raw_x, raw_m = :raw_y, dataset_id = :dataset_id';
+    var UpdateExpression = 'SET raw_f = :a, raw_m = :b, dataset_id = :dataset_id';
 
     var ExpressionAttributeValues = {
-      ':raw_x': data.x[i],
-      ':raw_y': data.y[i],
+      ':a': data.a[i],
+      ':b': data.b[i],
       ':dataset_id': data.dataset_id
     };
     

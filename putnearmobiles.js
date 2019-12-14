@@ -4,27 +4,26 @@ const docClient = new AWS.DynamoDB.DocumentClient({
 });
 
 
-
 // put al items
-const PutMovement = (data) => {
+const PutNearMobiles = (data) => {
 
   var promiseList = [];
+  // var UpdateExpression = 'SET record_time = :record_time, raw_x = :raw_x, ' +
+  // 'raw_y = :raw_y, raw_z = :raw_z';
 
   for(var i = 0; i < data.time_stamp.length; i++) 
   { 
-    var UpdateExpression = 'SET raw_x = :a, raw_y = :b, raw_z = :c, dataset_id = :dataset_id';
+    var UpdateExpression = 'SET mac_address = :a, dataset_id = :dataset_id';
 
     var ExpressionAttributeValues = {
       ':a': data.a[i],
-      ':b': data.b[i],
-      ':c': data.c[i],
       ':dataset_id': data.dataset_id
     };
     
     console.log("ExpressionAttributeValues", ExpressionAttributeValues);
   
     var ddbparams = {
-        TableName: process.env.MOVEMENT_TABLE_NAME,
+        TableName: process.env.NEAR_MOBILES_TABLE_NAME,
         Key: {
             'badge_id': data.badge_id,
             'time_stamp': data.time_stamp[i]
@@ -38,33 +37,11 @@ const PutMovement = (data) => {
   return Promise.all(promiseList);
 };
 
-const speed_get = (data) => {
-
-  var a_stride = new Array();
-
-  a_stride = [1, 1, 1, 1];
-
-
-  var fft = require('fft-js').fft,
-  fftUtil = require('fft-js').util;
-
-
-  var phasors= fft(a_stride);
-
-  var frequencies = fftUtil.fftFreq(phasors, 80), // Sample rate and coef is just used for length, and frequency step
-    magnitudes = fftUtil.fftMag(phasors);
-
-  var fre_mag = frequencies.map(function (f, ix) {
-    return {frequency: f, magnitude: magnitudes[ix]};
-  });
-  return fre_mag;
-
-}
 
 
 module.exports.handler = (event, context, callback) => {
   console.log(event.toString());
-  PutMovement(event).then(result => {
+  PutNearMobiles(event).then(result => {
     callback(null, {success:  true});
   }).catch(err => {
     callback(err);

@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "dependencies": {
     "express": "^4.17.1",
+    "jmespath": "^0.15.0",
     "serverless-http": "^2.3.0"
   },
   "devDependencies": {

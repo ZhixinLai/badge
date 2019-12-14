@@ -25,8 +25,11 @@ const getBadgeMetaData = (dataset_id, badge_id) => {
 };
 
 const getAllBadgeMetaData = query => {
+  let dataset_id = query.dataset_id;
   var scanParams = {
-    TableName: process.env.BADGE_META_DATA_TABLE_NAME
+    TableName : process.env.BADGE_META_DATA_TABLE_NAME,
+    FilterExpression : 'dataset_id = :dataset_id',
+    ExpressionAttributeValues : {':dataset_id' : dataset_id}
   };
 
   return new Promise((resolve, reject) => {
