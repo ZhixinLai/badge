@@ -48,13 +48,13 @@ provider:
             "Fn::Join":
               ["/", [{ "Fn::GetAtt": ["voiceTable", "Arn"] }, "index", "*"]],
           }
-        - { "Fn::GetAtt": ["dataSetMetaDataTable", "Arn"] }
+        - { "Fn::GetAtt": ["datasetMetaDataTable", "Arn"] }
         - {
             "Fn::Join":
               [
                 "/",
                 [
-                  { "Fn::GetAtt": ["dataSetMetaDataTable", "Arn"] },
+                  { "Fn::GetAtt": ["datasetMetaDataTable", "Arn"] },
                   "index",
                   "*",
                 ],
@@ -100,8 +100,8 @@ functions:
       STATE_MACHINE_ARN: { "Ref": "Hellostepfunc1StepFunctionsStateMachine" }
       MOVEMENT_TABLE_NAME: movementTable
       VOICE_TABLE_NAME: voiceTable
-      DATA_SET_META_DATA_TABLE_NAME: dataSetMetaDataTable
-      BADGE_DATA_TABLE_NAME: badgeMetaDataTable
+      DATA_SET_META_DATA_TABLE_NAME: datasetMetaDataTable
+      BADGE_META_DATA_TABLE_NAME: badgeMetaDataTable
     iamRoleStatementsInherit: true # lambda quanxian
     iamRoleStatements:
       - Effect: Allow
@@ -123,7 +123,7 @@ functions:
           method: GET
           cors: true
       - http:
-          path: /api/dataSetMetaData/{proxy+}
+          path: /api/datasetMetaData/{proxy+}
           method: GET
           cors: true
       - http:
@@ -131,7 +131,7 @@ functions:
           method: GET
           cors: true
       - http:
-          path: /api/dataSetMetaData
+          path: /api/datasetMetaData
           method: GET
           cors: true
       - http:
@@ -250,10 +250,10 @@ resources: # CloudFormation template syntax
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-    dataSetMetaDataTable:
+    datasetMetaDataTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: dataSetMetaDataTable
+        TableName: datasetMetaDataTable
         AttributeDefinitions:
           - AttributeName: dataset_id
             AttributeType: S

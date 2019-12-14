@@ -4,7 +4,7 @@ const router = express.Router();
 const getMovement = require("../services/get_movement");
 const getFromMobile = require("../services/startstepfunction");
 const getVoice = require("../services/get_voice");
-const getDataSetMetaData = require("../services/get_dataSetMetaData");
+const getDataSetMetaData = require("../services/get_datasetMetaData");
 const getBadgeMetaData = require("../services/get_badgeMetaData");
 
 router.get("/movement/:dataset_id", (req, res) => {
@@ -42,7 +42,7 @@ router.get("/badgeMetaData", (req, res) => {
     });
 });
 
-router.get("/dataSetMetaData/:dataset_id", (req, res) => {
+router.get("/datasetMetaData/:dataset_id", (req, res) => {
   var dataset_id = req.params.dataset_id;
   console.log(dataset_id);
   console.log(typeof dataset_id);
@@ -56,7 +56,7 @@ router.get("/dataSetMetaData/:dataset_id", (req, res) => {
     });
 });
 
-router.get("/dataSetMetaData", (req, res) => {
+router.get("/datasetMetaData", (req, res) => {
   getDataSetMetaData
     .getAllDataSetMetaData(req.querry)
     .then(data => {
