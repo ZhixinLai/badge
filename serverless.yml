@@ -43,6 +43,11 @@ provider:
             "Fn::Join":
               ["/", [{ "Fn::GetAtt": ["movementTable", "Arn"] }, "index", "*"]],
           }
+        - { "Fn::GetAtt": ["movementStateTable", "Arn"] }
+        - {
+            "Fn::Join":
+              ["/", [{ "Fn::GetAtt": ["movementStateTable", "Arn"] }, "index", "*"]],
+          }
         - { "Fn::GetAtt": ["voiceTable", "Arn"] }
         - {
             "Fn::Join":
@@ -98,6 +103,7 @@ functions:
     environment:
       STATE_MACHINE_ARN: { "Ref": "Hellostepfunc1StepFunctionsStateMachine" }
       MOVEMENT_TABLE_NAME: movementTable
+      MOVEMENT_STATE_TABLE_NAME: movementStateTable
       VOICE_TABLE_NAME: voiceTable
       DATA_SET_META_DATA_TABLE_NAME: datasetMetaDataTable
       BADGE_META_DATA_TABLE_NAME: badgeMetaDataTable
@@ -113,6 +119,10 @@ functions:
     events:
       - http:
           path: /api/movement/{proxy+}
+          method: GET
+          cors: true
+      - http:
+          path: /api/movementState/{proxy+}
           method: GET
           cors: true
       - http:
@@ -143,6 +153,10 @@ functions:
     handler: putmovement.handler
     environment:
       MOVEMENT_TABLE_NAME: movementTable
+  putmovementstate:
+    handler: putmovementstate.handler
+    environment:
+      MOVEMENT_STATE_TABLE_NAME: movementStateTable
   putvoice:
     handler: putvoice.handler
     environment:
@@ -237,6 +251,23 @@ resources: # CloudFormation template syntax
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: movementTable
+        AttributeDefinitions:
+          - AttributeName: badge_id
+            AttributeType: S
+          - AttributeName: time_stamp
+            AttributeType: N
+        KeySchema:
+          - AttributeName: badge_id
+            KeyType: HASH
+          - AttributeName: time_stamp
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    movementStateTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: movementStateTable
         AttributeDefinitions:
           - AttributeName: badge_id
             AttributeType: S
@@ -349,7 +380,7 @@ stepFunctions:
             - 
               Variable: "$.type"
               StringEquals: Movement
-              Next: PutMovement
+              Next: PutMovementAll
             - 
               Variable: "$.type"
               StringEquals: Voice
@@ -372,9 +403,21 @@ stepFunctions:
               Next: PutNearMobiles
 
             Default: DefaultState
-          PutMovement:
-            Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putmovement"
+          PutMovementAll:
+            Type: Parallel
+            Branches:
+            - StartAt: PutMovement
+              States:
+                PutMovement:
+                  Type: Task
+                  Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putmovement"
+                  End: true
+            - StartAt: PutMovementState
+              States:
+                PutMovementState:
+                  Type: Task
+                  Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putmovementstate"
+                  End: true
             End: true
           PutVoice:
             Type: Task

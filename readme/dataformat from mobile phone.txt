@@ -1,0 +1,56 @@
+{
+  "type": "NearMobiles",
+  "a": ["16"], // mac_address
+  "time_stamp": [1833],
+  "dataset_id": "1",
+  "badge_id":"2"
+}
+
+
+{
+  "type": "QRcode",
+  "a": ["16"], // code_String
+  "time_stamp": [1833],
+  "dataset_id": "1",
+  "badge_id":"2"
+}
+
+{
+  "type": "Movement",
+  "a": [1],
+  "b": [2],
+  "c": [2],
+  "time_stamp": [1833],
+  "dataset_id": "1",
+  "badge_id":"2"
+}
+
+{
+  "type": "Voice",
+  "a": [1],
+  "b": [2],
+  "c": [2],
+  "time_stamp": [1833],
+  "dataset_id": "1",
+  "badge_id":"2"
+}
+
+{ 
+  "type":"DatasetMetadata",
+  "a": "dataset2",
+  "b": 1999,
+  "c": "second time",
+  "d": "5",
+  "e": "lai",
+  "dataset_id": "2"
+}
+
+{ 
+  "type":"BadgeMetadata",
+  "a": "888",
+  "b":"lai",
+  "c":"lai8",
+  "badge_id": "999",
+  "time_stamp": 888,
+  "dataset_id": "0"
+}

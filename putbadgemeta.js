@@ -7,12 +7,13 @@ const docClient = new AWS.DynamoDB.DocumentClient({
 // put al items
 const PutBadgeMeta = (data) => {
 
-    var UpdateExpression = 'SET mac_id = :a, user_name = :b, user_id = :c, time_stamp = :time_stamp';
+    var UpdateExpression = 'SET mac_id = :a, user_name = :b, user_id = :c, password= :d, time_stamp = :time_stamp';
 
     var ExpressionAttributeValues = {
       ':a': data.a,
       ':b': data.b,
       ':c': data.c,
+      ':d': data.d,
       ':time_stamp': data.time_stamp
     };
     
@@ -28,8 +29,8 @@ const PutBadgeMeta = (data) => {
         ExpressionAttributeValues: ExpressionAttributeValues
     };
     return docClient.update(ddbparams).promise();
-
 };
+
 
 
 

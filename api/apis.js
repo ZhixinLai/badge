@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const getMovement = require("../services/get_movement");
+const getMovementState = require("../services/get_movementState");
 const getFromMobile = require("../services/startstepfunction");
 const getVoice = require("../services/get_voice");
 const getDataSetMetaData = require("../services/get_datasetMetaData");
@@ -10,6 +11,17 @@ const getBadgeMetaData = require("../services/get_badgeMetaData");
 router.get("/movement/:dataset_id", (req, res) => {
   var dataset_id = req.params.dataset_id;
   getMovement(dataset_id, req.query)
+    .then(data => {
+      res.json(data);
+    })
+    .catch(err => {
+      res.status(502).json({ msg: "Could not get tasks", err: err });
+    });
+});
+//------
+router.get("/movementState/:dataset_id", (req, res) => {
+  var dataset_id = req.params.dataset_id;
+  getMovementState(dataset_id, req.query)
     .then(data => {
       res.json(data);
     })
