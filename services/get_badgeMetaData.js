@@ -24,27 +24,55 @@ const getBadgeMetaData = (dataset_id, badge_id) => {
   });
 };
 
-const getAllBadgeMetaData = query => {
-  let dataset_id = query.dataset_id;
+const getBadgeIDBasedOnMac = query => {
+  var dataset_id = query.dataset_id;
+  var mac_address = query.mac_address;
+  var expressionAttributeValues = {};
+  expressionAttributeValues[":dataset_id"] = dataset_id;
+  expressionAttributeValues[":mac_address"] = mac_address;
+  var filterExpression =
+    "(mac_address = :mac_address) AND (dataset_id = :dataset_id)";
+  console.log("ExpressionAttributeValues", expressionAttributeValues);
   var scanParams = {
-    TableName : process.env.BADGE_META_DATA_TABLE_NAME,
-    FilterExpression : 'dataset_id = :dataset_id',
-    ExpressionAttributeValues : {':dataset_id' : dataset_id}
+    ExpressionAttributeValues: expressionAttributeValues,
+    FilterExpression: filterExpression,
+    TableName: process.env.BADGE_META_DATA_TABLE_NAME
   };
-
   return new Promise((resolve, reject) => {
-    docClient.scan(scanParams, (err, data) => {
-      if (err) {
-        console.log(err);
-        reject(err);
-      } else {
+    docClient
+      .scan(scanParams)
+      .promise()
+      .then(data => {
         resolve(data.Items);
-      }
-    });
+      })
+      .catch(err => {
+        reject(err);
+      });
   });
 };
 
+// const getAllBadgeMetaData = query => {
+//   let dataset_id = query.dataset_id;
+//   var scanParams = {
+//     TableName: process.env.BADGE_META_DATA_TABLE_NAME,
+//     FilterExpression: "dataset_id = :dataset_id",
+//     ExpressionAttributeValues: { ":dataset_id": dataset_id }
+//   };
+
+//   return new Promise((resolve, reject) => {
+//     docClient.scan(scanParams, (err, data) => {
+//       if (err) {
+//         console.log(err);
+//         reject(err);
+//       } else {
+//         resolve(data.Items);
+//       }
+//     });
+//   });
+// };
+
 module.exports = {
   getBadgeMetaData: getBadgeMetaData,
-  getAllBadgeMetaData: getAllBadgeMetaData
+  // getAllBadgeMetaData: getAllBadgeMetaData,
+  getBadgeIDBasedOnMac: getBadgeIDBasedOnMac
 };

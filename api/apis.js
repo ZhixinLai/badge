@@ -7,6 +7,18 @@ const getFromMobile = require("../services/startstepfunction");
 const getVoice = require("../services/get_voice");
 const getDataSetMetaData = require("../services/get_datasetMetaData");
 const getBadgeMetaData = require("../services/get_badgeMetaData");
+const getNearMobiles = require("../services/get_nearMobiles");
+
+router.get("/nearMobiles/:badge_id", (req, res) => {
+  var badge_id = req.params.badge_id;
+  getNearMobiles(badge_id, req.query)
+    .then(data => {
+      res.json(data);
+    })
+    .catch(err => {
+      res.status(502).json({ msg: "Could not get tasks", err: err });
+    });
+});
 
 router.get("/movement/:dataset_id", (req, res) => {
   var dataset_id = req.params.dataset_id;
@@ -18,7 +30,7 @@ router.get("/movement/:dataset_id", (req, res) => {
       res.status(502).json({ msg: "Could not get tasks", err: err });
     });
 });
-//------
+
 router.get("/movementState/:dataset_id", (req, res) => {
   var dataset_id = req.params.dataset_id;
   getMovementState(dataset_id, req.query)
@@ -45,7 +57,7 @@ router.get("/badgeMetaData/:dataset_id/:badge_id", (req, res) => {
 
 router.get("/badgeMetaData", (req, res) => {
   getBadgeMetaData
-    .getAllBadgeMetaData(req.query)
+    .getBadgeIDBasedOnMac(req.query)
     .then(data => {
       res.json(data);
     })
@@ -53,6 +65,17 @@ router.get("/badgeMetaData", (req, res) => {
       res.status(502).json({ msg: "Could not get tasks", err: err });
     });
 });
+
+// router.get("/badgeMetaData", (req, res) => {
+//   getBadgeMetaData
+//     .getAllBadgeMetaData(req.query)
+//     .then(data => {
+//       res.json(data);
+//     })
+//     .catch(err => {
+//       res.status(502).json({ msg: "Could not get tasks", err: err });
+//     });
+// });
 
 router.get("/datasetMetaData/:dataset_id", (req, res) => {
   var dataset_id = req.params.dataset_id;
