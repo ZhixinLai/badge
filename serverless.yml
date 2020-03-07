@@ -46,7 +46,10 @@ provider:
         - { "Fn::GetAtt": ["movementStateTable", "Arn"] }
         - {
             "Fn::Join":
-              ["/", [{ "Fn::GetAtt": ["movementStateTable", "Arn"] }, "index", "*"]],
+              [
+                "/",
+                [{ "Fn::GetAtt": ["movementStateTable", "Arn"] }, "index", "*"],
+              ],
           }
         - { "Fn::GetAtt": ["voiceTable", "Arn"] }
         - {
@@ -56,12 +59,22 @@ provider:
         - { "Fn::GetAtt": ["badgeMetaDataTable", "Arn"] }
         - {
             "Fn::Join":
-              ["/", [{ "Fn::GetAtt": ["badgeMetaDataTable", "Arn"] }, "index", "*"]],
+              [
+                "/",
+                [{ "Fn::GetAtt": ["badgeMetaDataTable", "Arn"] }, "index", "*"],
+              ],
           }
         - { "Fn::GetAtt": ["datasetMetaDataTable", "Arn"] }
         - {
             "Fn::Join":
-              ["/", [{ "Fn::GetAtt": ["datasetMetaDataTable", "Arn"] }, "index", "*"]],
+              [
+                "/",
+                [
+                  { "Fn::GetAtt": ["datasetMetaDataTable", "Arn"] },
+                  "index",
+                  "*",
+                ],
+              ],
           }
         - { "Fn::GetAtt": ["QRcodeTable", "Arn"] }
         - {
@@ -71,7 +84,10 @@ provider:
         - { "Fn::GetAtt": ["nearMobilesTable", "Arn"] }
         - {
             "Fn::Join":
-              ["/", [{ "Fn::GetAtt": ["nearMobilesTable", "Arn"] }, "index", "*"]],
+              [
+                "/",
+                [{ "Fn::GetAtt": ["nearMobilesTable", "Arn"] }, "index", "*"],
+              ],
           }
 # you can overwrite defaults here
 #  stage: dev
@@ -108,7 +124,7 @@ functions:
       DATA_SET_META_DATA_TABLE_NAME: datasetMetaDataTable
       BADGE_META_DATA_TABLE_NAME: badgeMetaDataTable
       QRCODE_TABLE_NAME: QRcodeTable
-      NEAR_MOBILES_TABLE_NAME: nearMobilesTable  
+      NEAR_MOBILES_TABLE_NAME: nearMobilesTable
     iamRoleStatementsInherit: true # lambda quanxian
     iamRoleStatements:
       - Effect: Allow
@@ -149,6 +165,11 @@ functions:
           path: /api/badgeMetaData/{proxy+}
           method: GET
           cors: true
+      - http:
+          path: /api/nearMobiles/{proxy+}
+          method: GET
+          cors: true
+
   putmovement:
     handler: putmovement.handler
     environment:
@@ -176,7 +197,7 @@ functions:
   putnearmobiles:
     handler: putnearmobiles.handler
     environment:
-      NEAR_MOBILES_TABLE_NAME: nearMobilesTable  
+      NEAR_MOBILES_TABLE_NAME: nearMobilesTable
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
@@ -376,58 +397,52 @@ stepFunctions:
         States:
           ChoiceState:
             Type: Choice
-            Choices: 
-            - 
-              Variable: "$.type"
-              StringEquals: Movement
-              Next: PutMovementAll
-            - 
-              Variable: "$.type"
-              StringEquals: Voice
-              Next: PutVoice
-            - 
-              Variable: "$.type"
-              StringEquals: BadgeMetadata
-              Next: PutBadgeMeta
-            - 
-              Variable: "$.type"
-              StringEquals: DatasetMetadata
-              Next: PutDatasetMeta
-            - 
-              Variable: "$.type"
-              StringEquals: QRcode
-              Next: PutQRcode
-            - 
-              Variable: "$.type"
-              StringEquals: NearMobiles
-              Next: PutNearMobiles
+            Choices:
+              - Variable: "$.type"
+                StringEquals: Movement
+                Next: PutMovementAll
+              - Variable: "$.type"
+                StringEquals: Voice
+                Next: PutVoice
+              - Variable: "$.type"
+                StringEquals: BadgeMetadata
+                Next: PutBadgeMeta
+              - Variable: "$.type"
+                StringEquals: DatasetMetadata
+                Next: PutDatasetMeta
+              - Variable: "$.type"
+                StringEquals: QRcode
+                Next: PutQRcode
+              - Variable: "$.type"
+                StringEquals: NearMobiles
+                Next: PutNearMobiles
 
             Default: DefaultState
           PutMovementAll:
             Type: Parallel
             Branches:
-            - StartAt: PutMovement
-              States:
-                PutMovement:
-                  Type: Task
-                  Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putmovement"
-                  End: true
-            - StartAt: PutMovementState
-              States:
-                PutMovementState:
-                  Type: Task
-                  Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putmovementstate"
-                  End: true
+              - StartAt: PutMovement
+                States:
+                  PutMovement:
+                    Type: Task
+                    Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putmovement"
+                    End: true
+              - StartAt: PutMovementState
+                States:
+                  PutMovementState:
+                    Type: Task
+                    Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putmovementstate"
+                    End: true
             End: true
           PutVoice:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putvoice"
             End: true
-          PutBadgeMeta: 
+          PutBadgeMeta:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putbadgemeta"
             End: true
-          PutDatasetMeta: 
+          PutDatasetMeta:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-putdatasetmeta"
             End: true
@@ -442,7 +457,6 @@ stepFunctions:
           DefaultState:
             Type: Fail
             Cause: "No Matches!"
-
 
 plugins:
   - serverless-step-functions
