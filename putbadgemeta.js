@@ -7,7 +7,7 @@ const docClient = new AWS.DynamoDB.DocumentClient({
 // put al items
 const PutBadgeMeta = (data) => {
 
-    var UpdateExpression = 'SET mac_id = :a, user_name = :b, user_id = :c, password= :d, time_stamp = :time_stamp';
+    var UpdateExpression = 'SET mac_address = :a, user_name = :b, user_id = :c, password= :d, time_stamp = :time_stamp';
 
     var ExpressionAttributeValues = {
       ':a': data.a,

@@ -11,28 +11,27 @@ const PutNearMobiles = (data) => {
   // var UpdateExpression = 'SET record_time = :record_time, raw_x = :raw_x, ' +
   // 'raw_y = :raw_y, raw_z = :raw_z';
 
-  for(var i = 0; i < data.time_stamp.length; i++) 
-  { 
-    var UpdateExpression = 'SET mac_address = :a, dataset_id = :dataset_id';
 
-    var ExpressionAttributeValues = {
-      ':a': data.a[i],
-      ':dataset_id': data.dataset_id
-    };
-    
-    console.log("ExpressionAttributeValues", ExpressionAttributeValues);
+  var UpdateExpression = 'SET mac_address = :a, dataset_id = :dataset_id';
+
+  var ExpressionAttributeValues = {
+    ':a': data.a,
+    ':dataset_id': data.dataset_id
+  };
   
-    var ddbparams = {
-        TableName: process.env.NEAR_MOBILES_TABLE_NAME,
-        Key: {
-            'badge_id': data.badge_id,
-            'time_stamp': data.time_stamp[i]
-        },
-        UpdateExpression: UpdateExpression,
-        ExpressionAttributeValues: ExpressionAttributeValues
-    };
-    promiseList.push(docClient.update(ddbparams).promise());
-  }
+  console.log("ExpressionAttributeValues", ExpressionAttributeValues);
+
+  var ddbparams = {
+      TableName: process.env.NEAR_MOBILES_TABLE_NAME,
+      Key: {
+          'badge_id': data.badge_id,
+          'time_stamp': data.time_stamp[0]
+      },
+      UpdateExpression: UpdateExpression,
+      ExpressionAttributeValues: ExpressionAttributeValues
+  };
+  promiseList.push(docClient.update(ddbparams).promise());
+
 
   return Promise.all(promiseList);
 };

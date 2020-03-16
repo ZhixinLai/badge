@@ -9,9 +9,9 @@ const getDataSetMetaData = require("../services/get_datasetMetaData");
 const getBadgeMetaData = require("../services/get_badgeMetaData");
 const getNearMobiles = require("../services/get_nearMobiles");
 
-router.get("/nearMobiles/:badge_id", (req, res) => {
-  var badge_id = req.params.badge_id;
-  getNearMobiles(badge_id, req.query)
+router.get("/nearMobiles/:dataset_id", (req, res) => {
+  var dataset_id = req.params.dataset_id;
+  getNearMobiles(dataset_id, req.query)
     .then(data => {
       res.json(data);
     })
@@ -57,7 +57,7 @@ router.get("/badgeMetaData/:dataset_id/:badge_id", (req, res) => {
 
 router.get("/badgeMetaData", (req, res) => {
   getBadgeMetaData
-    .getBadgeIDBasedOnMac(req.query)
+    .getAllBadgeMetaData(req.query)
     .then(data => {
       res.json(data);
     })

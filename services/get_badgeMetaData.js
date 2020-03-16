@@ -24,18 +24,22 @@ const getBadgeMetaData = (dataset_id, badge_id) => {
   });
 };
 
-const getBadgeIDBasedOnMac = query => {
+const getAllBadgeMetaData = query => {
   var dataset_id = query.dataset_id;
   var mac_address = query.mac_address;
   var expressionAttributeValues = {};
   expressionAttributeValues[":dataset_id"] = dataset_id;
-  expressionAttributeValues[":mac_address"] = mac_address;
-  var filterExpression =
-    "(mac_address = :mac_address) AND (dataset_id = :dataset_id)";
+  if (mac_address !== undefined && mac_address !== null) {
+    expressionAttributeValues[":mac_address"] = mac_address;
+  }
+  var filterExpression = ["(dataset_id = :dataset_id)"];
+  if (mac_address !== undefined && mac_address !== null) {
+    filterExpression.push("(mac_address = :mac_address)");
+  }
   console.log("ExpressionAttributeValues", expressionAttributeValues);
   var scanParams = {
     ExpressionAttributeValues: expressionAttributeValues,
-    FilterExpression: filterExpression,
+    FilterExpression: filterExpression.join(" AND "),
     TableName: process.env.BADGE_META_DATA_TABLE_NAME
   };
   return new Promise((resolve, reject) => {
@@ -73,6 +77,6 @@ const getBadgeIDBasedOnMac = query => {
 
 module.exports = {
   getBadgeMetaData: getBadgeMetaData,
-  // getAllBadgeMetaData: getAllBadgeMetaData,
-  getBadgeIDBasedOnMac: getBadgeIDBasedOnMac
+  getAllBadgeMetaData: getAllBadgeMetaData
+  //getBadgeIDBasedOnMac: getBadgeIDBasedOnMac
 };
